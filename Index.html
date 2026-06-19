@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Expense Logger</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --accent-color: #2ed573;
+            --text-color: #ffffff;
+            --text-muted: #a0a0a0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            margin-top: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            border-radius: 8px;
+            border: none;
+            background-color: var(--accent-color);
+            color: #000000;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: opacity 0.2s;
+        }
+
+        button:active {
+            opacity: 0.8;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>⚡ Quick Log</h2>
+    
+    <form id="expenseForm">
+        <div class="form-group">
+            <label for="amount">Amount</label>
+            <input type="number" id="amount" name="amount" step="any" inputmode="decimal" placeholder="0.00" required>
+        </div>
+
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category" required>
+                <option value="" disabled selected>Choose Category</option>
+                <option value="Food">🍔 Food & Dining</option>
+                <option value="Transport">🚗 Transport / Commute</option>
+                <option value="Groceries">🛒 Groceries</option>
+                <option value="Bills">💡 Bills & Utilities</option>
+                <option value="Entertainment">🎬 Entertainment</option>
+                <option value="Others">📦 Others</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="notes">Notes (Optional)</label>
+            <input type="text" id="notes" name="notes" placeholder="e.g., Starbucks coffee">
+        </div>
+
+        <button type="submit" id="submitBtn">Log Expense</button>
+    </form>
+
+    <div class="status" id="statusMessage"></div>
+</div>
+
+<script>
+    // REPLACE THIS URL WITH YOUR GOOGLE WEB APP URL
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzpWv93zDrSI-LF1sUXsik1wsFWlLuk2RDyo4C1PcDmSYI4cNtNsiMmQoBr16I4_qHV/exec';
+
+    document.getElementById('expenseForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevents page reload
+        
+        const submitBtn = document.getElementById('submitBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        
+        // Visual indicator that the app is working
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Logging...';
+        statusMessage.innerText = '';
+
+        // Capture form data values
+        const amount = document.getElementById('amount').value;
+        const category = document.getElementById('category').value;
+        const notes = document.getElementById('notes').value;
+
+        // Formulate URL encoded body string for standard Apps Script processing
+        const formData = new URLSearchParams();
+        formData.append('amount', amount);
+        formData.append('category', category);
+        formData.append('notes', notes);
+
+        // Send POST request to Google Apps Script web service
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Essential bypass for cross-origin tracking scripts
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        })
+        .then(() => {
+            // Because of 'no-cors' mode, we treat completed execution context as success
+            statusMessage.style.color = 'var(--accent-color)';
+            statusMessage.innerText = '✓ Expense saved successfully!';
+            
+            // Reset the form values for the next expense entry
+            document.getElementById('expenseForm').reset();
+        })
+        .catch(error => {
+            statusMessage.style.color = '#ff4757';
+            statusMessage.innerText = '❌ Failed to save. Try again.';
+            console.error('Error logging transaction:', error);
+        })
+        .finally(() => {
+            // Restore button function state
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Log Expense';
+        });
+    });
+</script>
+
+</body>
+</html>
